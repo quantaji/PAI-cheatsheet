@@ -1,0 +1,43 @@
+\section{Laplace Approximation}
+If $p(\theta|\mathcal{D})$ intractable, approx by $q(\theta)=\mathcal{N}(\hat{\theta}, \Lambda^{-1})$, where $\hat{\theta}=\arg \max _\theta p(\theta |\mathcal{D})$, $\Lambda=-\nabla \nabla \log p(\hat{\theta} | y)$. 
+ may lead to poor overconfident approximation
+ \subsection{Bayesian Logistic Regression}
+\textbf{mode} $\hat{\mathbf{W}}=\arg \min _{\mathbf{w}} \sum_{i=1}^n \log (1+\exp (-y_i \mathbf{w}^T \mathbf{x}_i))+\lambda\|\mathbf{w}\|_2^2$, optimized by SGD. 
+\textbf{var} $\Lambda = \mathbf{X}^T \operatorname{diag}([\pi_i(1-\pi_i)]_i) \mathbf{X}$.
+\textbf{pred} 1D-integral $p(y^* | \mathcal{D} ) = \int \sigma(y^* f) \mathcal{N}(f ; \hat{\mathbf{w}}^T \mathbf{x}^*, \mathbf{x}^{* T} \Lambda^{-1} \mathbf{x}^*) d f$
+
+\section{Variational Inference}
+\textbf{Goal} tracktable $q$ approx intractable $p(\theta|\mathcal{D})$. \\
+\textbf{Forward} KL $q^* \in \arg \min _{q \in \mathcal{Q}} K L(p \| q)$ more spreaded distribution. \\
+\textbf{Reverse KL} $q^* \in \arg \min _{q \in \mathcal{Q}} K L(q \| p)$ mode selection but over confident. 
+
+1. Equiv to $\arg \max _q \mathbb{E}_{\theta {\small \sim} q(\theta)}[\log p(\theta, y)]+H(q)$ $=\arg \max _q \mathbb{E}_{\theta {\small \sim} q(\theta)}[\log p(y | \theta)]-K L(q \| p(\theta))$
+
+2. Equiv to  $\log p(y)=\log \mathbb{E}_{\theta {\small \sim} q}[p(y | \theta) \frac{p(\theta)}{q(\theta)}] d \theta$ $\geq \mathbb{E}_{\theta {\small \sim} q}[\log (p(y | \theta) \frac{p(\theta)}{q(\theta)})] d \theta$ $=\mathbb{E}_{\theta {\small \sim} q}[\log p(y | \theta)]$ $- K L(q \| p(\theta))$ (ELBO)
+
+\textbf{reparam trick} $\mathbb{E}_{\theta {\small \sim} q_\lambda}[f(\theta)]=\mathbb{E}_{\epsilon {\small \sim} \phi}[f(g(\epsilon ; \lambda))]$, so $\nabla_\lambda \mathbb{E}_{\theta {\small \sim} q_\lambda}[f(\theta)]=\mathbb{E}_{\epsilon {\small \sim} \phi}[\nabla_\lambda f(g(\epsilon ; \lambda))]$
+
+\textbf{score gradient} $\nabla_\lambda L(\lambda)=\mathbb{E}_{\theta {\small \sim} q_\lambda}[\nabla_\lambda \log q(\theta | \lambda)$ $(\log p(y, \theta)-\log q(\theta | \lambda))]$, for diagonal gaussian $q$, twice expensive as MAP (additional var)
+Both unbiased estimator
+
+\section{Markov Chain Monte Carlo}
+\textbf{Goal} approx unnormalized $p$ by sampling.
+
+Hoeffding ineq $P(|\mathbb{E}_P[f(X)]-\frac{1}{N} \sum_{i=1}^N f(x_i)|>\varepsilon) \leq 2 \exp (-2 N \varepsilon^2 / C^2)$ for bounded $f\in[0,C]$, exponential acc.
+
+\textbf{Detailed balance} $Q(\mathbf{x}) P(\mathbf{x}^{\prime} | \mathbf{x})=Q(\mathbf{x}^{\prime}) P(\mathbf{x} | \mathbf{x}^{\prime})$
+
+Ergodic thm: for ergodic Markov chain, finite state $\lim _{N arrow \infty} \frac{1}{N} \sum_{i=1}^N f(x_i)=\sum_{x \in D} \pi(x) f(x)$
+
+\textbf{Metropolis Hastings}, proposal distr, samplable $R(X^{\prime} | X)$. 1. sample $x'$ given $x$ 2. accept by prob $\alpha=\min \{1, \frac{Q(x^{\prime}) R(x | x^{\prime})}{Q(x) R(x^{\prime} | x)}\}$
+
+
+\textbf{Gibbs sampling} sample per coordinate by $P(X_i | \boldsymbol{x}_{-i})$, can show $\alpha \equiv 1$, random order of coordinates retains DB, fixed order no DB. 
+
+\subsection{continuous space}
+\begin{itemize} [itemsep=0pt,topsep=0pt, leftmargin=2pt, itemindent=5pt, labelwidth=5pt]
+    \item Metropolis adjusted Langevin Algorithm (MALA, LMC) $R(x^{\prime} | x)=\mathcal{N}(x^{\prime} ; x-\tau \nabla f(x) ; 2 \tau I)$,  prefer high density region, efficient, mixing time polynomial in dimension.
+    \item Stochastic Gradient Langevin Dynamics (SGLD), minibatch on posterior, $p(\theta|\mathcal{D})\approx \exp(\log p(\theta) + \frac{n}{m} \sum_{j=1}^m \log p(y_{i_j} | \theta_t, x_{i_j}))$, converge if $\eta_t=O(t^{-1/3})$, but usually constant.
+    \item Hamiltonian MC: adding momentem term.
+\end{itemize}
+

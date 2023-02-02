@@ -1,0 +1,19 @@
+\section{Preliminary}
+\textbf{CE} $H(P, Q)=-\sum p \ln q$, $\mathsf{KL}(P \| Q)=\sum p \ln (p/q)$, \textbf{Entropy} $H(X) = - \mathbb{E} \ln p$. 
+
+\textbf{Normal} $\mathcal{N}(\mu, \sigma)=e^{-(x-\mu)^2/2/\sigma^2}/(\sqrt{2\pi}\sigma)$, $H=[\ln(2\pi\sigma^2)+1]/2$, $\mathsf{KL}(1\|2)=[\sigma_1^2/\sigma_2^2 - 1 - 2\ln \sigma_1/\sigma_2 + (\mu_1-\mu_2)^2/2\sigma_2^2]/2$
+
+\textbf{Multi} $\mathcal{N}(\boldsymbol{\mu}, \boldsymbol{\Sigma})=(2 \pi)^{-k / 2} \operatorname{det}(\boldsymbol{\Sigma})^{-1 / 2} \exp (-\frac{1}{2}(\mathbf{x}-\boldsymbol{\mu})^{\top} \boldsymbol{\Sigma}^{-1}(\mathbf{x}-\boldsymbol{\mu}))$,
+$H = [\ln \det (2\pi e \boldsymbol{\Sigma})]/2$,
+$\mathsf{KL}(1\|2)=[\operatorname{tr}(\boldsymbol{\Sigma}_2^{-1} \boldsymbol{\Sigma}_1)+(\boldsymbol{\mu}_2-\boldsymbol{\mu}_1)^{\mathrm{T}} \boldsymbol{\Sigma}_2^{-1}(\boldsymbol{\mu}_2-\boldsymbol{\mu}_1)-k + \ln |\boldsymbol{\Sigma}_2| / |\boldsymbol{\Sigma}_1|]/2$
+
+\textbf{Cond} $\mu_{a|b} =\mu_a+\Sigma_{ab}\Sigma_{bb}^{-1}(x_b-\mu_b)$, $\Sigma_{a|b} = \Sigma_{aa} - \Sigma_{ab}\Sigma_{bb}^{-1}\Sigma_{ba}$
+
+Woodbury $(A + U C^{-1} V)^{-1} = A^{-1} - A^{-1}U(C+VA^{-1}U)^{-1}V A^{-1}$, $(A + ww^{\top})^{-1} = A^{-1} -  (1+w^{\top}A^{-1}w)^{-1} A^{-1}ww^{\top} A^{-1}$
+
+Matrix Diff $\partial_x A^{-1} =-A^{-1} (\partial_x A) A^{-1}$,
+$partial_x\ln\det A=\mathrm{Tr}(A^{-1}\partial_x A)$,
+Def $(\partial_A f)_{ij}=\partial_{a_{ji}} f$, 
+$\partial_{A^{\top}} f = (\partial_A f)^{\top}$,
+$\partial_A \mathrm{tr}(BA)=B$, $\partial_A \ln\det A=A^{-1}$,
+$\partial_A \mathrm{tr}(ABA^{\top})=(B+B^{\top})A^{\top}$

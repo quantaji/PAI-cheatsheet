@@ -1,0 +1,34 @@
+\section{Bayesian DL}
+\textbf{Goal}: model noise depends on input, \textit{heteroscedastic} $p(y | \mathbf{x}, \theta)=\mathcal{N}(y ; f_1(\mathbf{x}, \theta), \exp (f_2(\mathbf{x}, \theta)))$
+
+\textbf{MAP}: $\arg \min _\theta \lambda\|\theta\|_2^2+\frac{1}{2} \sum_{i=1}^n[\frac{1}{\sigma(x_i ; \theta)^2}\|y_i-\mu(x_i ; \theta)\|^2+\log \sigma(x_i ; \theta)^2]$,  attenuate loss by attributing error to large var.
+
+\textbf{Bayesian}: $p(y^* | x^*,\mathcal{D})=\int p(y^* | x^*, \theta) p(\theta | \mathcal{D}) d \theta$, approx with $q$ and maximize ELBO. \\
+\textbf{Pred} approx with sampling $p(y^* | \mathbf{x}^*, \mathbf{x}_{1: n}, y_{1: n}) \approx \mathbb{E}_{\theta {\small \sim} q(\cdot | \lambda)}[p(y^* | \mathbf{x}^*, \theta)]$ 
+
+$\operatorname{Var}[y^* | \theta, \mathbf{x}^*]=\mathbb{E}[\operatorname{Var}[y^* | \mathbf{x}^*, \theta]]+\operatorname{Var}[\mathbb{E}[y^* | \mathbf{x}^*, \theta]]$ $\approx \frac{1}{m} \sum_{j=1}^m \sigma^2(x^*, \theta^{(j)})+\frac{1}{m} \sum_{j=1}^m(\mu(x^*, \theta^{(j)})-\bar{\mu}(x^*))^2$, \textit{Aleatoric} + \textit{Epistemic}
+
+\textbf{MCMC methods}: SGLD SGHMC. Challenge: 1. expensive to store all $\theta$. 2. need to drop first samples to avoid burn-in. Sol: 1. keep a subset of $m$ snapshots. 2. approx $\{\theta_i\}$ by gaussian, works well with SGD with no noise (SWAG).
+
+\textbf{Monte-carlo Dropout} $q_j(\theta_j | \lambda_j)=p \delta_0(\theta_j)+(1-p) \delta_{\lambda_j}(\theta_j)$, dropout in prediction.
+
+\textbf{Probablistic Ensembles}, train with several subset and treat as sampling.
+
+Aleatoric uncertainty of classification, by injecting learnable gaussian noise $\mathbf{p}=\operatorname{softmax}(\mathbf{f}+\varepsilon)$
+
+\section{Calibration}
+
+\textbf{Goal} want model to have empirical freq $p$, among all its prediction which output prob $\hat{p}=p$, $P(\hat{y}=y|\hat{p}=p)=p$.
+
+\textbf{Evaluation} partition $\mathcal{D}_{\mathrm{val}}=B_1\cup \ldots \cup B_M$, s.t. $\hat{p}_i\in((m-1)/M, m/M], \forall i\in B_m$, then $\mathrm{Acc}_m:=\sum_{i}|\hat{y}_i = y_i|/|B_m|$, $\mathrm{Conf}_m:=\sum_i \hat{p}_i / |B_m|$, Calibration wants $\mathrm{Acc}_m = \mathrm{Conf}_m$.  
+
+\textbf{Metric} Expected/Maximum calibration error (ECE/MCM),  weighted average/maximum discrepancy across bins.
+
+\textbf{Plot} Reliability diagrams, Conf-Acc plot, calibrated model should give diagonal.
+
+\textbf{Methods improve calibration}
+\begin{itemize}  [itemsep=0pt,topsep=0pt, leftmargin=2pt, itemindent=5pt, labelwidth=5pt]
+    \item Histogram binning, assign calibrated score to each bin $\hat{q}_i=\operatorname{freq}(B_m)$
+    \item Isotonic regression, find piecewise constant funciont $\hat{q}_i=f(\hat{p}_i)$ minimize bin-wise square loss $\min _{M, \theta_1, \ldots, \theta_M, a_1, \ldots, a_{M+1}} \sum_{m=1}^M \sum_{i=1}^n \mathbf{1}(a_m \leq \hat{p}_i<a_{m+1})(\theta_m-y_i)^2$
+    \item Platt (temperature) scaling, binary $\hat{q}_i=\sigma(a z_i+b)$, multi-class $\hat{q}_i=\max _k \sigma_{\text {softmax }}(\boldsymbol{z}_i / T)^{(k)}$, param learnable.
+\end{itemize}

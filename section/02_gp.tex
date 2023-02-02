@@ -1,0 +1,41 @@
+\section{Gaussian Process}
+Kernel $k(x, x')$, symmetric, positive semi-definite. 
+
+ $k_1+k_2$, $k_1 k_2$, $ck_1$, $f(k_1)$ are also kernels.
+
+\textit{Stationary} if $k(x, x^{\prime})=k(x-x^{\prime})$ 
+\textit{isotropic} if $k(x, x^{\prime})=k(\|x-x^{\prime}\|_2)$
+
+1. Rational Quadratic  $(1+\alpha (x-x')^2/2h^{2})^{-\alpha}$, \\
+2. RBF (square exponent) $\exp (-\|x-x^{\prime}\|_2^2 / h^2)$, \\
+3. Periodic $\exp(-2\sin^2(\pi|x-x'|/p)/h^2)$, \\
+4. exponent $\exp (-\|x-x^{\prime}\|_1 / h)$, no where diff, \\
+5. linear $\sigma_b^2+\sigma_v^2(x-c)(x^{\prime}-c)$, or $\phi(x)^{\top}\Lambda^{-1}\phi(x')$, $O(n^3)$ to $O(n)$ acceleration, \\
+6. Matérn, $k(x,x';\nu, h)$, $\nu=1/2$ exponential, $3/2$ once diff, $5/2$ twice diff, $\infty$ Gaussian,  
+
+\textbf{Kernel Regression} \\ 
+\textbf{prior}  $(f(x^{*}_{1:m}))^{\top} {\small \sim} \mathcal{N}(0, \sigma^{2} I_{m m} + K_{m m})$, \\
+\textbf{post} $\mathbb{E} [Y^*] = K_{m n}(\sigma^{2} I_{n n}+K_{n n})^{-1}Y$, $\mathrm{Cov}[Y^*] = K_{m m} - K_{m n} (\sigma^2  I_{n n} + K_{n n})^{-1} K_{n m}+\sigma^{2}I_{m m}$.
+
+Optimize hyperparam: 1. cross-validation \\
+2. Bayesian: maximize marginal likelihood $\hat{\theta}=\arg\max_{\theta} p(Y|X,\theta)=\int p(Y|X,f)p(f|\theta)\mathrm{d}f$, likelihood$\times$prior, big when both terms big. \\
+\textbf{Objective}:  $\arg\min_\theta[\ln |K_Y(\theta)|+y^{\top}K_Y(\theta)^{-1}y]/2$ , where $K_Y(\theta)=K(X|\theta)+\sigma^2I$(NLL), volume of hypothesis space + goodness of fit.\\
+\textbf{training} $\partial_{\theta_j} \log p(\mathbf{y} | X, \theta)=\frac{1}{2} \operatorname{tr}((\alpha \alpha^T-\mathbf{K}^{-1}) \partial_{\theta_j} \mathbf{K})$, non-convex, local optima.
+
+\textbf{Sampling} 1. $f=L\varepsilon$, where $K=LL^{T}$ by Cholesky decomp. 
+2. \textbf{forward sampling} $p(f_{1:N})=p(f_1)p(f_2|f_1)\cdots$.
+
+\section{Fast GP Methods}
+\begin{itemize}[itemsep=0pt,topsep=0pt, leftmargin=2pt, itemindent=5pt, labelwidth=5pt]
+\item By default $O(n^3)$ by solve linear system, linear kernel $O(nd^2)$ (also can solve recursively)
+\item GPU parallel can accelerate.
+\item Local methods, for decaying $K$, ignore points if $|k(x, x^{\prime})| < \mathbf{\tau}$, expensive if many points near.
+\item Kernel approximation $k(x, x^{\prime}) \approx \phi(x)^T \phi(x^{\prime}), \phi(x) \in \mathbb{R}^m$, $O(n m^2+m^3)$
+\item Random Fourier Feature, stationary $K$ has $k(x-x^{\prime})=\int_{\mathbb{R}^d} p(\omega) e^{j \omega^T(x-x^{\prime})} d \omega$, (is kernel iff $p(\omega) \geq 0$). Interpret $k(x-x^{\prime})=\mathbb{E}_{\omega, b}[z_{\omega, b}(\boldsymbol{x}) \cdot z_{\omega, b}(\boldsymbol{x}^{\prime})]$, $\omega {\small \sim} p(\omega),b {\small \sim} U([0,2 \pi])$. Accelerate by sample, use $z(\boldsymbol{x}):=\sqrt{\frac{2}{D}}[\cos (\boldsymbol{\omega}_1^T \boldsymbol{x}+b_1), \ldots, \cos (\boldsymbol{\omega}_D^T \boldsymbol{x}+b_D)]$ as features, so $k(x, x^{\prime}) \approx z(x)^T z(x^{\prime})$. Approx uniformly well $\sup _{\boldsymbol{x}, \boldsymbol{x}^{\prime} \in M}|z(\boldsymbol{x})^T z(\boldsymbol{x}^{\prime})-k(\boldsymbol{x}, \boldsymbol{x}^{\prime})| \leq \epsilon$. No data need, good and bad.
+\item Inducing points, joint $p(\mathbf{f}^*, \mathbf{f})=\int p(\mathbf{f}^*, \mathbf{f} | \mathbf{u}) p(\mathbf{u}) d \mathbf{u}$, 
+approx by $\int q(\mathbf{f}^* | \mathbf{u}) q(\mathbf{f} | \mathbf{u}) p(\mathbf{u}) d \mathbf{u}$, 
+with $q(\mathbf{f}^* | \mathbf{u})$ and $q(\mathbf{f} | \mathbf{u})$ approx $p(\mathbf{f}^* | \mathbf{u})$ and $p(\mathbf{f} | \mathbf{u})$. 
+1. Subset of Regressor(SoR): $q_{S O R}(\boldsymbol{f} | \boldsymbol{u})=N(\boldsymbol{K}_{\boldsymbol{f}, \boldsymbol{u}} \boldsymbol{K}_{\boldsymbol{u}, \boldsymbol{u}}^{\boldsymbol{- 1}} \boldsymbol{u}, 0)$, can show $k_{S o R}(\mathbf{x}, \mathbf{x}^{\prime})=k(\mathbf{x}, \mathbf{u}) \mathbf{K}_{\mathbf{u}, \mathbf{u}}^{-1} k(\mathbf{u}, \mathbf{x}^{\prime})$
+2. Fully independent training conditional (FITC) $q_{F I T C}(\boldsymbol{f} | \boldsymbol{u})=\prod_{i=1}^n p(f_i | u)$.
+Complexity mainly on inverting $K_{\boldsymbol{u}, \boldsymbol{u}}$ (cubic), linear in $n$.
+\end{itemize}

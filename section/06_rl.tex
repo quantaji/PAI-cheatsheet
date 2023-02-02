@@ -1,0 +1,95 @@
+\section{Markov Decision Process}
+Expected value $J(\pi)=\mathbb{E}[\sum_{t=0}^{\infty} \gamma^t r(X_t, \pi(X_t))]$.
+
+Value func $V^\pi(x):=J(\pi | X_0=x)=r(x, \pi(x))+\gamma \sum_{x^{\prime}} P(x^{\prime} | x, \pi(x)) V^\pi(x^{\prime})$, can obtained by solving linear system.
+
+\textbf{Bellman ineq} $V^*(x)=\max _a[r(x, a)+\gamma \sum_{x^{\prime}} P(x^{\prime} | x, a) V^*(x^{\prime})]$, policy optimal $\Leftrightarrow$ greedy to $V(x)$, can solved by \textit{Linear Programming}.
+
+\textbf{Policy Iter} 1. compute $V^\pi(x)$, 2. get greedy policy $\pi_G$ of $V^\pi(x)$, 3.$\pi \leftarrow \pi_G$. \textbf{Pro} Guarantee monotonic improve $V^{\pi_{t+1}}(x) >= V^{\pi_{t}}(x)$. Converge to optimal in $O(n^2 m /(1-\gamma))$ iteration. \textbf{Con} Every iteration requires computing $V$.  \\ Per iter cost: $\mathcal{O}(|\mathcal{X}|^3+|\mathcal{X}|^2|\mathcal{A}|)$.
+
+\textbf{Value Iter} (DP, fixed point) 1. $Q_t(x, a)=r(x, a)+\gamma \sum_{x^{\prime}} P(x^{\prime} | x, a) V_{t-1}(x^{\prime})$, 2. $V_t(x)=\max _a Q_t(x, a)$, 3. stop if $\|V_t-V_{t-1}\|_{\infty}=\max _x|V_t(x)-V_{t-1}(x)| \leq \varepsilon$, 4. choose greedy policy w.r.t $V_t$. \textbf{Pro} 1. Guarantee converge to $\varepsilon$-optimal policy, proof $\|B^{*} V - B^{*}V'\|_{\infty}\leq \gamma \|V - V'\|_{\infty}$. 2. local updates. \\ Per iter cost: $\mathcal{O}(|\mathcal{X}|^2|\mathcal{A}|)$.
+
+ Which works better depends on application, can combine ideas of both algorithms
+
+ \textbf{partially observed MDP} (POMDP) can only obtain noisy observations $Y_t$ of hidden state $X_t$, powerful model, extremely intractable. 
+
+ POMDP = Belief-state MDP, viewed as enlarged state space, $P(X_t | y_{1: t})$, beliefs. $\mathcal{B}=\Delta(\{1, \ldots, n\})=\{b:\{1, \ldots, n\} \leftarrow[0,1], \sum_x b(x)=1\}$ 
+ 
+Stochastic observation $P(Y_{t+1}=y | b_t, a_t)=\sum_{x, x^{\prime}} b_t(x) P(x^{\prime} | x, a_t) P(y | x^{\prime})$.
+
+State update (Bayesian filter) $b_{t+1}(x^{\prime})=\frac{1}{Z} \sum_x b_t(x) P(X_{t+1}=x^{\prime} | X_t=x, a_t) P(y_{t+1} | x^{\prime})$.
+
+Reward $r(b_t, a_t)=\sum_x b_t(x) r(x, a_t)$.
+
+For finite horizon T, set of reachable belief states is finite (but exponential in T). Can calculate optimal action using DP.
+
+\section{Reinforcement Learning}
+Trajectories $\tau=(x_0, a_0, r_0, x_1, a_1, r_1, x_2, \ldots)$.
+
+\textbf{Episodic setting} each episodes results in a trajectory, after that environment resets.
+
+\textbf{non-episodic/continuous} single trajectory.
+
+\textbf{on/off-policy} agent have full control/can only observe data (from a different $\pi$).
+
+\textbf{model-based RL} estimate $P(x^{\prime} | x, a)$ and $r(x, a)$, and optimize upon it.
+
+\textbf{model-free}, estimate value func, policy-gradient, actor-critic.
+
+\subsection{Model-based RL}
+\textbf{Goal} Learn MDP. Exploration-exploitation dilemma.
+
+\textbf{MLE} yields $\hat{P}(X_{t+1} | X_t, A) \approx \frac{\#(X_{t+1}, X_t, A)}{\#(X_t, A)}$, $\hat{r}(x, a)=\frac{1}{N_{x, a}} \sum_{t: X_t=x, A_t=a} R_t$. 
+If sequence $\varepsilon_t$ satisfies Robbins-Monro condition $\sum_t \varepsilon_t=\infty, \sum_t \varepsilon_t^2<\infty$, converge to optim policy with $p=1$, often performs fairly well, but cannot quickly eliminate clearly sub-optimal actions.
+
+\textbf{$R_{\mathrm{max}}$ algo}, if $r(x, a)$ unknown, set to $R_{\mathrm{max}}$, if $P(x^{\prime} | x, a)$ unknown, set $P(x^* | x, a)=1$, where $x^{*}$ fairy tale state. 
+\textbf{Pro} no need to explicit choose exploration, exploitation, rule out sub-optimal action quickly.
+Estimate $P$ and $r$ using Hoeffiding bound $n_{x,a}=O(R_{\mathrm{max}}^2log(\delta^{-1})\varepsilon^{-2})$.
+
+\textbf{Thm} every $T$ times, with high prob, $R_{\mathrm{max}}$ either obtains near-optimal reward, or visit at least one unknown $(s,a)$ pair, $T$ related to mixing time of MDP wiht optimal policy.
+
+\textbf{thm} with prob $1-\delta$ $R_{\mathrm{max}}$ reach $\epsilon$-optimal policy with steps poly in $|X|,|A|, T, 1 / \varepsilon$, $\log (1 / \delta), R_{\max }$
+
+
+model-based RL mem required: store every $r(x, a)$ and $P(x^{\prime} | x, a)$, totally $O(|X|^2|A|)$, computation time: value/policy iteration.
+
+\subsection{Model-free RL}
+
+\textbf{TD-learing} $\hat{V}^\pi(x) \leftarrow(1-\alpha_t) \hat{V}^\pi(x)+\alpha_t(r+\gamma \hat{V}^\pi(x^{\prime}))$, converge to $V^{\pi}$ with $p=1$ when $\sum_t \alpha_t=\infty$ and $\sum_t \alpha_t^2<\infty$
+
+\textbf{Q-learning} $\hat{Q}^*(x, a) \leftarrow(1-\alpha_t) \hat{Q}^*(x, a)+\alpha_t(r+\gamma \max _{a^{\prime}} \hat{Q}^*(x^{\prime}, a^{\prime}))$. 
+Mem $O(nm)$.
+Comp per transition $O(m)$.
+
+Convergence of optimistic Q-learning, if init $\hat{Q}^*(x, a)=\frac{R_{\max }}{1-\gamma} \prod_{t=1}^{T_{\text {init }}}(1-\alpha_t)^{-1}$, and at time $t$, pick $a_t \in \arg \max _a \hat{Q}^*(x_t, a)$, then with $p=1-\delta$, algo obtains $\varepsilon$-optimal policy with steps poly in $|X|,|A|, 1 / \varepsilon$, $\log (1 / \delta)$.
+
+Challenge 1. scaling up, $|X|, |A|$ exponential in \#agents, 2 learn/approx value func.
+
+\textbf{TD as SGD}, bootstrap $\ell_2(\theta ; x, x^{\prime}, r)=\frac{1}{2}(V(x ; \theta)-r-\gamma V(x^{\prime} ; \theta_{o l d}))^2$, paramterization $V(x ; \theta)$ or $Q(x, a ; \theta)$, e.g. $Q(x, a ; \theta)=\theta^T \phi(x, a)$.
+
+\textbf{DQN} $L(\theta)=\sum_{(x, a, r, x^{\prime}) \in D}(r+\gamma \max _{a^{\prime}} Q(x^{\prime}, a^{\prime} ; \theta^{\text {old }})-Q(x, a ; \theta))^2$, con: maximization bias.
+Double DQN $L(\theta)=\sum_{(x, a, r, x^{\prime}) \in D}(r+\gamma  Q(x^{\prime}, a^{*}(\theta) ; \theta^{\text {old }})-Q(x, a ; \theta))^2$, where $a^*(\theta)={\operatorname{argmax}}_{a^{\prime}} Q(x^{\prime}, a^{\prime} ; \theta)$
+
+\subsection{Policy Gradient}
+
+Parameterize $\pi(x)=\pi(x ; \theta)$, and optimized globally $\theta^*=\arg \max _\theta J(\theta)$.
+
+$\nabla J(\theta)=\nabla \mathbb{E}_{\tau {\small \sim} \pi_\theta} r(\tau)=\mathbb{E}_{\tau {\small \sim} \pi_\theta}[\sum_{\tau=0}^{T} r(\tau)$ $\nabla \log \pi_\theta(\tau)]$, where can be shown $r(\tau)=\sum_{t=0}^T \gamma^t r(x_t, a_t)$ , unbiased but large variance, solve by adding bias $\mathbb{E}_{\tau {\small \sim} \pi_\theta}[(r(\tau)-b) \nabla \log \pi_\theta(\tau)]$, state dependent bias.
+
+can also show $=\mathbb{E}_{\tau {\small \sim} \pi_\theta}[\sum_{t=0}^T(r(\tau)-b(\tau_{0: t-1})) \nabla \log \pi(a_t | x_t ; \theta)]$, choosing $b(\tau_{0: t-1})=\sum_{t^{\prime}=0}^{t-1} \gamma^{t^{\prime}} r_{t^{\prime}}$, we get $\nabla J(\theta)=\mathbb{E}_{\tau {\small \sim} \pi_\theta}[\sum_{t=0}^T \gamma^t G_t \nabla \log \pi(a_t | x_t ; \theta)]$, where $G_t=\sum_{t^{\prime}=t}^T \gamma^{t^{\prime}-t} r_t$ (REINFORCE)
+
+further variance reduction $\nabla J(\theta)=\mathbb{E}_{\tau {\small \sim} \pi_\theta}[\sum_{t=0}^T \gamma^t(G_t-b_t(x_t)) \nabla \log \pi(a_t | x_t ; \theta)]$, where $b_t(x_t):=b_t=\frac{1}{T} \sum_{t=0}^{T-1} G_t$
+
+Improvements 1. value-function estimates->AC, 2. regularization, 3. off-policy PG, 4. natual gradient.
+
+\subsection{Actor-Critic}
+
+Advantage func $A^\pi(x, a)=Q^\pi(x, a)-V^\pi(x)$.
+
+Action-Value expression $\mathbb{E}_{\tau {\small \sim} \pi_\theta}[\sum_{t=0}^{\infty}\gamma^t Q(x_t, a_t) $ $\nabla \log \pi(a_t | x_t ; \theta)]$
+
+On-line AC: approx $Q(x,a;\theta)$ instead, and train $Q$ with TD like $\theta_Q \leftarrow \theta_Q-\eta_t(Q(x, a ; \theta_Q)-r-\gamma Q(x^{\prime}, \pi(x^{\prime}, \theta_\pi) ; \theta_Q)) \nabla Q(x, a ; \theta_Q)$. can replace $Q$ in PG with $Q(x, a ; \theta_Q)-V(x ; \theta_V)$ (A2C).
+
+Trust-region (TRPO) PPO $\theta_{k+1}=\arg \max _\theta \hat{J}(\theta_k, \theta) \text { s.t. } K L(\theta \| \theta_k) \leq \delta$, $\hat{J}(\theta_k, \theta)=\mathbb{E}_{x, a {\small \sim} \pi_{\theta_k}}[\frac{\pi(a | x ; \theta)}{\pi(a | x ; \theta_k)} A^{\pi_{\theta_k}}(x, a)]$, guarantees to monotonic improvement in $J(\theta)$
+
+Off-line AC: use Q-learning to train $Q$, replace maximization with $L(\theta_Q)=\sum_{(x, a, r, x^{\prime}) \in D}(r+\gamma Q(x^{\prime}, \pi(x^{\prime} ; \theta_\pi) ; \theta_Q^{o l d})-Q(x, a ; \theta_Q))^2$, where $\theta_\pi$ close to greedy.

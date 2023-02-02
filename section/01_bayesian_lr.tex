@@ -1,0 +1,7 @@
+\section{Bayesian LR}
+\textbf{Model} $\beta^{\top}\phi(x)+E$, $E\sim\mathcal{N}(0,\sigma^2)$ i.i.d.,  \\
+\textbf{Prior} $\beta\sim \mathcal{N}(0,\Lambda^{-1})$, 
+\textbf{data} $\Phi=[\phi(x_{1:n})]^{\top} \in \mathbb{R}^{n\times m}$ 
+\textbf{Posterior} $\beta\sim\mathcal{N}(\mu_{\beta},\Sigma_{\beta})$, $\Sigma_{\beta} = (\Lambda + \sigma^{-2}\Phi^{\top}\Phi)^{-1}, \mu_{\beta} = \Sigma_{\beta}\Phi^{\top} Y$ \\
+Bayesian Pred $\mathbb{E}_{\beta_{\mathrm{posterior}},E} Y^* = \Phi^{*}\mu_{\beta}$, $\mathrm{Cov}[Y^*] = \Phi^{*}\Sigma_{\beta} \Phi^{*\top} + \sigma^{2} I_{p\times p}$, \textit{epistemic} (uncertainty on $f^*$, due to lack of data) + \textit{aleatoric} (uncertainty about $y^* | f^*$, irreducible noise).
+MAP Pred, Ridge regression: use $\mu_\beta$ as prediction.
